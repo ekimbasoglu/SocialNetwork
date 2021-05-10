@@ -1,0 +1,25 @@
+<mat-accordion multi="false" *ngIf="us.users.length > 0">
+  <mat-expansion-panel *ngFor="let item of us.users">
+    <mat-expansion-panel-header>
+      {{ item.firstName }} {{item.surname }}
+    </mat-expansion-panel-header>
+    <p>Age: {{item.age}} Gender: {{item.gender}}</p>
+
+    <div *ngIf="(us.currentUser!=null && us.currentUser.id==item.id)">
+      <br>
+      <p >{{item.firstName}}'s Direct friends:<br> <span
+          *ngFor="let friend of us.currentUser.friendsOfUser">{{friend.name}} {{friend.surname}} <br></span></p>
+      <p>{{item.firstName}}'s Friends of friends:<br> <span
+          *ngFor="let friend of us.currentUser.friendOfFriends">{{friend.name}} {{friend.surname}} <br></span> </p>
+      <p>{{item.firstName}}'s Suggested friends:<br> <span
+          *ngFor="let friend of us.currentUser.suggestedFriends">{{friend.name}} {{friend.surname}} <br></span>
+      </p>
+    </div>
+
+    <mat-action-row>
+      <button  mat-button color="primary" (click)="getUserInfo(item.id)">
+        Show More Info</button>
+    </mat-action-row>
+  </mat-expansion-panel>
+</mat-accordion>
+<p class="userInfo caption" *ngIf="us.users.length <= 0">There is no added thread</p>

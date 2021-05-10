@@ -1,0 +1,9 @@
+:host {
+  display: block;
+  margin-top: 2rem;
+  padding-bottom: 7rem;
+}
+.userInfo {
+  text-align: center;
+  padding-top: 2rem;
+}
