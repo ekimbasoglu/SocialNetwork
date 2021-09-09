@@ -1,29 +1,113 @@
 const express = require('express');
-const app = express();
 const mongoose = require('mongoose');
 const cors = require('cors');
+const expressJwt = require("express-jwt");
+const lusca = require("lusca");
+const mongoSanitize = require("express-mongo-sanitize");
+const compression = require("compression");
+const environments = require("./config/environments");
+const { name } = require("./package.json");
+const path = require("path");
+const ErrorHandler = require("./middlewares/errorHandling/errorHandler");
+const mongoDB = require("./config/database/connection");
 require('dotenv/config');
-//Import Routes
-const userRoute = require('./routes/user');
+
+
+const port = environments.PORT;
+const appURL = `http://localhost:${port}/`;
+mongoose.Promise = global.Promise;
+
+const app = express();
+
+
+//App Routes
+// const userRoutes = require('./routes/user');
+// Newer version down below, use later components
+const UserRoutes = require('./components/user/usersRouter');
+
 
 app.use(cors());
+app.use(express.json({ limit: "20mb" }));
 mongoose.set('useCreateIndex', true);
-
-// bodyParser
+app.use(compression());
+app.use(mongoSanitize());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.disable("x-powered-by");
 
-app.use('/user', userRoute);
+// Security
+app.use(lusca.xframe("ALLOWALL"));
+app.use(lusca.xframe("SAMEORIGIN"));
+app.use(lusca.xssProtection(true));
 
-//routes
+
+// Create the database connection
+mongoose.connect(mongoDB.connectionString(), {
+  // this one isn't compatible with useUnifideToplogy
+  // reconnectTries: Number.MAX_VALUE,
+  useNewUrlParser: true,
+  useCreateIndex: true,
+  // so it will remove deprication warrning
+  useFindAndModify: false,
+  // so it will remove warrning
+  useUnifiedTopology: true,
+});
+
+mongoose.connection.on("connected", () => {
+  // eslint-disable-next-line no-console
+  console.log(
+    `Mongoose default connection open to ${mongoDB.connectionString()}`
+  );
+});
+
+// CONNECTION EVENTS
+// If the connection throws an error
+mongoose.connection.on("error", (err) => {
+  // eslint-disable-next-line no-console
+  console.log(`Mongoose default connection error: ${err}`);
+});
+
+// When the connection is disconnected
+mongoose.connection.on("disconnected", () => {
+  // eslint-disable-next-line no-console
+  console.log("Mongoose default connection disconnected");
+});
+
+// When the connection is open
+mongoose.connection.on("open", () => {
+  // eslint-disable-next-line no-console
+  console.log("Mongoose default connection is open");
+});
+
+// If the Node process ends, close the Mongoose connection
+process.on("SIGINT", () => {
+  mongoose.connection.close(() => {
+    // eslint-disable-next-line no-console
+    console.log(
+      "Mongoose default connection disconnected through app termination"
+    );
+    process.exit(0);
+  });
+});
+
+//Routes
+app.use('/user', UserRoutes);
+
+app.use(ErrorHandler());
+
+//default route
 app.get('/', (req, res) => {
-    res.send('Home Page');
+  res.send('Home Page');
 });
 
-// Connect to Db
-mongoose.connect(process.env.DB_CONNECTION, { useNewUrlParser: true, useUnifiedTopology: true }, () => {
-    console.log('connected to Db!');
-});
+console.log(`__________ ${name} __________`);
+// eslint-disable-next-line no-console
+console.log(`Starting on port: ${port}`);
+// eslint-disable-next-line no-console
+console.log(`Env: ${environments.NODE_ENV}`);
+// eslint-disable-next-line no-console
+console.log(`App url: ${appURL}`);
+// eslint-disable-next-line no-console
+console.log("______________________________");
 
-//listen
-app.listen(3000);
+app.listen(port);
+module.exports = app;
