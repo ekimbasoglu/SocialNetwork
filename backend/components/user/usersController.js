@@ -5,26 +5,59 @@ const { isValidId } = require('../../lib/misc');
 
 // eslint-disable-next-line arrow-body-style
 exports.getAllUser = async (req, res) => {
-  try {
-    const user = await User.find();
-    if (user.length > 0) {
-      res.json(user);
-    } else {
-      res.json({ message: 'No user exist' });
-    }
-  } catch (error) {
-    res.json({ message: err });
+
+  // const user = await User.find();
+  const user = await User.find();
+  user.sort((x, y) => { return x.id - y.id; }); // Sorting users by id
+  let results = [];
+
+  for (let i = 0; i < user.length; i++) {
+    let friends = await User.find({ id: { "$in": user[i].friends } });
+    results
+      .push(
+        {
+          id: user[i].id,
+          name: user[i].firstName + ' ' + user[i].surname,
+          age: user[i].age,
+          gender: user[i].gender,
+          friends: friends
+            .map((friend) => {
+              return {
+                id: friend.id,
+                name: friend.firstName + ' ' + friend.surname,
+                age: friend.age,
+                gender: friend.gender,
+              }
+            })
+            // Sorting by Id of friends
+            .sort((x, y) => { return x.id - y.id; })
+        });
   }
+
+  if (!user) throw new Error('There is no user');
+
+  return res.status(200).send({
+    status: 'Successfully fetched',
+    results
+  });
+
 };
 
 // eslint-disable-next-line arrow-body-style
 exports.getUser = async (req, res) => {
   try {
     const user = await User.find({ id: req.params.id });
-    if (user.length > 0) {
-      const friends = await User.find({ id: { "$in": user[0].friends } }); // user[0].friends
-      res.json({ name: user[0].firstName, surname: user[0].surname, friends: friends.map((f) => { return { name: f.firstName, surname: f.surname } }) });
-    }
+
+    if (!user) throw new Error('User not found!');
+
+    const friends = await User.find({ id: { "$in": user[0].friends } }); // user[0].friends
+    const results = { name: user[0].firstName, surname: user[0].surname, friends: friends.map((f) => { return { name: f.firstName, surname: f.surname } }) };
+
+    return res.status(200).send({
+      message: 'User successfully fetched',
+      results
+    });
+
   } catch (error) {
     res.json({ message: "User not found " + error });
   }
