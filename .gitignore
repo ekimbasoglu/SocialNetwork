@@ -7,8 +7,6 @@
 # Only exists if Bazel was run
 /bazel-out
 backend/.vscode/*
-backend/config/environments/*
-!backend/config/environments/test.env
 backend/error.log
 # dependencies
 /node_modules

@@ -8,8 +8,8 @@ const router = express.Router();
 router
   .get('/', catchAsyncError(usersController.getAllUser))
   .get('/:id', catchAsyncError(usersController.getUser))
-  .get('/friends/:id', catchAsyncError(usersController.getUserFriends))
-  .get('/fof/:id', catchAsyncError(usersController.getUserFof))
-  .get('/sf/:id', catchAsyncError(usersController.getUserSf));
+  .get('/:id/friends', catchAsyncError(usersController.userFriends))
+  .get('/:id/fof', catchAsyncError(usersController.friendsOfFriends))
+  .get('/:id/suggestedfriends', catchAsyncError(usersController.suggestedFriends));
 
 module.exports = router;
