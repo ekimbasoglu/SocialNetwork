@@ -101,6 +101,18 @@ exports.userFriends = async (req, res) => {
   });
 };
 
+// Find friends of user's friends
+function findFriendsOfUsersFriend(usersFriend) {
+  let friendsOfFriends = [];
+  for (var i in usersFriend) {
+    for (var j in usersFriend[i].friends) {
+      let friendsOfUsersFriend = usersFriend[i].friends[j];
+      friendsOfFriends.push(friendsOfUsersFriend);
+    }
+  }
+  return friendsOfFriends;
+}
+
 exports.friendsOfFriends = async (req, res) => {
   const user = await User.find({ id: req.params.id });
   const friendsOfFriends = [], currentUser = req.params.id;
@@ -112,8 +124,10 @@ exports.friendsOfFriends = async (req, res) => {
     for (var j in usersFriend[i].friends) {
       const friendsOfUsersFriend = usersFriend[i].friends[j];
       if (
-        friendsOfUsersFriend != currentUser && // Fof can't be the current user
-        !user[0].friends.includes(friendsOfUsersFriend)) { // Fof can't be the current users friends
+        // Fof can't be the current user
+        friendsOfUsersFriend != currentUser &&
+        // Fof can't be the current users friends
+        !user[0].friends.includes(friendsOfUsersFriend)) {
         friendsOfFriends.push(friendsOfUsersFriend);
       }
     }
@@ -142,36 +156,55 @@ exports.friendsOfFriends = async (req, res) => {
 };
 
 exports.suggestedFriends = async (req, res) => {
-  try {
+  const user = await User.find({ id: req.params.id });
+  const currentUser = req.params.id, friendsOfFriendsIds = [], suggestedFriendsIds = [];
+  const usersFriend = await User.find({ id: { "$in": user[0].friends } });
 
-    const currentUser = await User.find({ id: req.params.id });
-    if (currentUser.length > 0) {
-      const friends = await User.find({ id: { "$in": currentUser[0].friends } });
-      const fofIds = [];
-      for (var i in friends) {
-        for (var j in friends[i].friends) {
-          if (friends[i].friends[j] != req.params.id && !currentUser[0].friends.includes(friends[i].friends[j]))
-            fofIds.push(friends[i].friends[j]);
-        }
+  if (!user) throw new Error('There is no user');
+
+  for (var i in usersFriend) {
+    for (var j in usersFriend[i].friends) {
+      const friendsOfUsersFriend = usersFriend[i].friends[j];
+      if (
+        // Fof can't be the current user
+        friendsOfUsersFriend != currentUser &&
+        // Fof can't be the current users friends
+        !user[0].friends.includes(friendsOfUsersFriend)) {
+        friendsOfFriendsIds.push(friendsOfUsersFriend);
       }
-
-      const seconduser = await User.find({ id: { '$in': fofIds } });
-      const sfIds = [];
-      for (var i in seconduser) {
-        for (var j in seconduser[i].friends) {
-          if (seconduser[i].friends[j] != req.params.id && !currentUser[0].friends.includes(seconduser[i].friends[j]) && !fofIds.includes(seconduser[i].friends[j]))
-            sfIds.push(seconduser[i].friends[j]);
-        }
-      }
-
-      const thirdUser = await User.find({ id: { '$in': sfIds } });
-      res.json({ friends: thirdUser.map((f) => { return { id: f.id, name: f.firstName, surname: f.surname } }) });
-
-    } else {
-      res.json({ message: "Current user not found" });
     }
-  } catch (error) {
-    res.json({ message: error });
   }
-};
 
+  const secondUser = await User.find({ id: { '$in': friendsOfFriendsIds } });
+  for (var i in secondUser) {
+    for (var j in secondUser[i].friends) {
+      const friendsOfUsersFriend = secondUser[i].friends[j];
+      if (
+        friendsOfUsersFriend != req.params.id &&
+        user[0].friends.includes(friendsOfUsersFriend) &&
+        !friendsOfFriendsIds.includes(friendsOfUsersFriend)) {
+        suggestedFriendsIds.push(friendsOfUsersFriend);
+      }
+    }
+  }
+  const thirdUser = await User.find({ id: { '$in': suggestedFriendsIds } });
+
+  const results =
+  {
+    friends: thirdUser
+      .map((friend) => {
+        return {
+          id: friend.id,
+          name: friend.firstName + ' ' + friend.surname,
+          age: friend.age,
+          gender: friend.gender,
+        }
+      })
+      // Sorting by Id of friends
+      .sort((x, y) => { return x.id - y.id; })
+  };
+  return res.status(200).send({
+    status: 'Successfully fetched',
+    results
+  });
+};
