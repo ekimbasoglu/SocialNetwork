@@ -1,7 +1,6 @@
 const error = require('../../middlewares/errorHandling/errorConstants');
 const { User } = require('../../models/user');
 const { isValidId } = require('../../lib/misc');
-const { getFriendsOfFriends } = require('../../lib/friendsHandler.js');
 
 
 exports.getAllUser = async (req, res) => {
@@ -119,7 +118,7 @@ exports.friendsOfFriends = async (req, res) => {
       }
     }
   }
-  // Searches tjhe second user by id of the+
+
   const secondUser = await User.find({ id: { '$in': friendsOfFriends } });
 
   const results =
