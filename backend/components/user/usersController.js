@@ -1,6 +1,7 @@
 const error = require('../../middlewares/errorHandling/errorConstants');
 const { User } = require('../../models/user');
 const { isValidId } = require('../../lib/misc');
+const { getFriendsOfFriends } = require('../../lib/friendsHandler.js');
 
 
 exports.getAllUser = async (req, res) => {
@@ -103,19 +104,42 @@ exports.userFriends = async (req, res) => {
 
 exports.friendsOfFriends = async (req, res) => {
   const user = await User.find({ id: req.params.id });
+  const friendsOfFriends = [], currentUser = req.params.id;
+  const usersFriend = await User.find({ id: { "$in": user[0].friends } });
+
   if (!user) throw new Error('There is no user');
 
-  const friends = await User.find({ id: { "$in": user[0].friends } });
-  const fofIds = [];
-  for (var i in friends) {
-    for (var j in friends[i].friends) {
-      if (friends[i].friends[j] != req.params.id && !user[0].friends.includes(friends[i].friends[j]))
-        fofIds.push(friends[i].friends[j]);
+  for (var i in usersFriend) {
+    for (var j in usersFriend[i].friends) {
+      const friendsOfUsersFriend = usersFriend[i].friends[j];
+      if (
+        friendsOfUsersFriend != currentUser && // Fof can't be the current user
+        !user[0].friends.includes(friendsOfUsersFriend)) { // Fof can't be the current users friends
+        friendsOfFriends.push(friendsOfUsersFriend);
+      }
     }
   }
-  const secondUser = await User.find({ id: { '$in': fofIds } });
-  res.json({ friends: secondUser.map((f) => { return { id: f.id, name: f.firstName, surname: f.surname } }) });
+  // Searches tjhe second user by id of the+
+  const secondUser = await User.find({ id: { '$in': friendsOfFriends } });
 
+  const results =
+  {
+    friends: secondUser
+      .map((friend) => {
+        return {
+          id: friend.id,
+          name: friend.firstName + ' ' + friend.surname,
+          age: friend.age,
+          gender: friend.gender,
+        }
+      })
+      // Sorting by Id of friends
+      .sort((x, y) => { return x.id - y.id; })
+  };
+  return res.status(200).send({
+    status: 'Successfully fetched',
+    results
+  });
 };
 
 exports.suggestedFriends = async (req, res) => {
