@@ -13,7 +13,7 @@ const mongoDB = require("./config/database/connection");
 require('dotenv/config');
 
 
-const port = environments.PORT;
+const port = environments.PORT || 8080;
 const appURL = `http://localhost:${port}/`;
 mongoose.Promise = global.Promise;
 

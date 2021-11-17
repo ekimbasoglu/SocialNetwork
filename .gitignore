@@ -47,3 +47,4 @@ testem.log
 Thumbs.db
 
 backend/config/environments/development.env
+backend/.gitignore

@@ -44,17 +44,45 @@ exports.getAllUser = async (req, res) => {
 
 exports.getUser = async (req, res) => {
   const user = await User.find({ id: req.params.id });
+  const currentUser = req.params.id, friendsOfFriendsIds = [], suggestedFriendsIds = [];
+  const usersFriend = await User.find({ id: { "$in": user[0].friends } });
 
   if (!user) throw new Error('There is no user');
 
-  const friends = await User.find({ id: { "$in": user[0].friends } });
+  for (var i in usersFriend) {
+    for (var j in usersFriend[i].friends) {
+      const friendsOfUsersFriend = usersFriend[i].friends[j];
+      if (
+        // Fof can't be the current user
+        friendsOfUsersFriend != currentUser &&
+        // Fof can't be the current users friends
+        !user[0].friends.includes(friendsOfUsersFriend)) {
+        friendsOfFriendsIds.push(friendsOfUsersFriend);
+      }
+    }
+  }
+
+  const secondUser = await User.find({ id: { '$in': friendsOfFriendsIds } });
+  for (var i in secondUser) {
+    for (var j in secondUser[i].friends) {
+      const friendsOfUsersFriend = secondUser[i].friends[j];
+      if (
+        !user[0].friends.includes(friendsOfUsersFriend) &&
+        !friendsOfFriendsIds.includes(friendsOfUsersFriend)) {
+        suggestedFriendsIds.push(friendsOfUsersFriend);
+      }
+    }
+  }
+
+  const thirdUser = await User.find({ id: { '$in': suggestedFriendsIds } });
+
   const results =
   {
     id: user[0].id,
     name: user[0].firstName + ' ' + user[0].surname,
     age: user[0].age,
     gender: user[0].gender,
-    friends: friends
+    usersFriend: usersFriend
       .map((friend) => {
         return {
           id: friend.id,
@@ -64,7 +92,29 @@ exports.getUser = async (req, res) => {
         }
       })
       // Sorting by Id of friends
-      .sort((x, y) => { return x.id - y.id; })
+      .sort((x, y) => { return x.id - y.id; }),
+    usersFriendsOfFriends: secondUser
+      .map((friend) => {
+        return {
+          id: friend.id,
+          name: friend.firstName + ' ' + friend.surname,
+          age: friend.age,
+          gender: friend.gender,
+        }
+      })
+      // Sorting by Id of friends
+      .sort((x, y) => { return x.id - y.id; }),
+    suggestedFriends: thirdUser
+      .map((friend) => {
+        return {
+          id: friend.id,
+          name: friend.firstName + ' ' + friend.surname,
+          age: friend.age,
+          gender: friend.gender,
+        }
+      })
+      // Sorting by Id of friends
+      .sort((x, y) => { return x.id - y.id; }),
   };
 
   return res.status(200).send({
@@ -158,7 +208,7 @@ exports.suggestedFriends = async (req, res) => {
     for (var j in secondUser[i].friends) {
       const friendsOfUsersFriend = secondUser[i].friends[j];
       if (
-        user[0].friends.includes(friendsOfUsersFriend) &&
+        !user[0].friends.includes(friendsOfUsersFriend) &&
         !friendsOfFriendsIds.includes(friendsOfUsersFriend)) {
         suggestedFriendsIds.push(friendsOfUsersFriend);
       }
