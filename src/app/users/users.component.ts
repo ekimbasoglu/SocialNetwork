@@ -9,11 +9,11 @@ import { Subscription } from 'rxjs';
 })
 export class UsersComponent implements OnInit {
   allUsers: any = [];
+  currentUser: any = null;
+
   constructor(private usersService: UsersService) {}
 
   ngOnInit(): void {
-    // this.usersService.getUsers();
-
     this.usersService.getUsers().subscribe(
       (res) => {
         this.allUsers = res.results.map((users: any) => {
@@ -25,7 +25,14 @@ export class UsersComponent implements OnInit {
   }
 
   getUserInfo(userId: string) {
-    //(item.id)
-    // this.usersService.getUserInfo(userId);
+    this.usersService.getUserInfo(userId).subscribe(
+      (res: any) => {
+        this.currentUser = res.results;
+        console.log(this.currentUser);
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
   }
 }

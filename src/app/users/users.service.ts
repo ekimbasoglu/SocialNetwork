@@ -13,29 +13,11 @@ export class UsersService {
 
   getUsers(): Observable<any> {
     return this.http.get('https://nodejs-socialnetwork.herokuapp.com/user/');
-    // this.http.get('https://nodejs-socialnetwork.herokuapp.com/user/').subscribe(
-    //   (data) => {
-    //     console.log(data);
-    //     this.users = data;
-    //   },
-    //   (error) => {
-    //     console.log(error);
-    //     // this.users();
-    //   }
-    // );
   }
 
   getUserInfo(id: string) {
-    // item.id
-    this.http
-      .get('https://nodejs-socialnetwork.herokuapp.com/user/' + id)
-      .subscribe(
-        (data) => {
-          this.currentUser = data;
-        },
-        (error) => {
-          console.log(error);
-        }
-      );
+    return this.http.get(
+      'https://nodejs-socialnetwork.herokuapp.com/user/' + id
+    );
   }
 }

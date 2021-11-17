@@ -5,21 +5,21 @@
     </mat-expansion-panel-header>
     <p>Age: {{user.age}} Gender: {{user.gender}}</p>
 
-    <!-- <div *ngIf="(allUsers.currentUser!=null && us.currentUser.id==item.id)">
+    <div *ngIf="( currentUser !=null && currentUser.id==user.id)">
       <br>
-      <p >{{item.firstName}}'s Direct friends:<br> <span
-          *ngFor="let friend of us.currentUser.friendsOfUser">{{friend.name}} {{friend.surname}} <br></span></p>
-      <p>{{item.firstName}}'s Friends of friends:<br> <span
-          *ngFor="let friend of us.currentUser.friendOfFriends">{{friend.name}} {{friend.surname}} <br></span> </p>
-      <p>{{item.firstName}}'s Suggested friends:<br> <span
-          *ngFor="let friend of us.currentUser.suggestedFriends">{{friend.name}} {{friend.surname}} <br></span>
+      <p >{{user.name}}'s Direct friends:<br> <span
+          *ngFor="let friend of currentUser.usersFriend">{{friend.name}} <br></span></p>
+      <p>{{user.name}}'s Friends of friends:<br> <span
+          *ngFor="let friend of currentUser.usersFriendsOfFriends">{{friend.name}} <br></span> </p>
+      <p>{{user.name}}'s Suggested friends:<br> <span
+          *ngFor="let friend of currentUser.suggestedFriends">{{friend.name}} <br></span>
       </p>
-    </div> -->
+    </div>
 
-    <!-- <mat-action-row>
-      <button  mat-button color="primary" (click)="getUserInfo(item.id)">
+    <mat-action-row>
+      <button  mat-button color="primary" (click)="getUserInfo(user.id)">
         Show More Info</button>
-    </mat-action-row> -->
+    </mat-action-row>
   </mat-expansion-panel>
 </mat-accordion>
 <p class="userInfo caption" *ngIf="allUsers.length <= 0">There is no user</p>
