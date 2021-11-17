@@ -73,34 +73,6 @@ exports.getUser = async (req, res) => {
   });
 };
 
-exports.userFriends = async (req, res) => {
-  const user = await User.find({ id: req.params.id });
-
-  if (!user) throw new Error('There is no user');
-
-  const friends = await User.find({ id: { "$in": user[0].friends } });
-
-  const results =
-  {
-    friends: friends
-      .map((friend) => {
-        return {
-          id: friend.id,
-          name: friend.firstName + ' ' + friend.surname,
-          age: friend.age,
-          gender: friend.gender,
-        }
-      })
-      // Sorting by Id of friends
-      .sort((x, y) => { return x.id - y.id; })
-  };
-
-  return res.status(200).send({
-    status: 'Successfully fetched',
-    results
-  });
-};
-
 function showResults(user) {
   const results =
   {
@@ -118,6 +90,19 @@ function showResults(user) {
   };
   return results;
 }
+
+exports.userFriends = async (req, res) => {
+  const user = await User.find({ id: req.params.id });
+
+  if (!user) throw new Error('There is no user');
+
+  const friends = await User.find({ id: { "$in": user[0].friends } });
+
+  return res.status(200).send({
+    status: 'Successfully fetched',
+    results: showResults(friends)
+  });
+};
 
 exports.friendsOfFriends = async (req, res) => {
   const user = await User.find({ id: req.params.id });
