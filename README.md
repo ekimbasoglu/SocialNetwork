@@ -11,6 +11,4 @@ git clone https://github.com/ekimbasoglu/SocialNetwork
 
 ```
 ng serve
-cd backend
-npm start
 ```
