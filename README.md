@@ -12,13 +12,3 @@ git clone https://github.com/ekimbasoglu/SocialNetwork
 ```
 ng serve
 ```
-
-
-## Routes
-
-```
-nodejs-socialnetwork.herokuapp.com/user
-nodejs-socialnetwork.herokuapp.com/user/1
-nodejs-socialnetwork.herokuapp.com/user/1/fof
-nodejs-socialnetwork.herokuapp.com/user/1/suggestedfriends
-```
